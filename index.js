@@ -43,19 +43,25 @@ client.connect(err => {
 
     doctorCollection.find({ email: email })
       .toArray((err, doctors) => {
-        const filter = { date: date }
+        const filter = { date: date}
         if (doctors.length === 0) {
           filter.email = email;
         }
 
-        appointmentCollection.find({ filter })
+        appointmentCollection.find(filter)
           .toArray((err, documents) => {
             res.send(documents)
           })
 
       })
+  })
 
-
+  app.post('/get-todays-appointment', (req,res) => {
+    const date = req.body.date;
+    appointmentCollection.find({date:date})
+    .toArray((err,documents)=>{
+      res.send(documents)
+    })
   })
 
 
@@ -65,7 +71,6 @@ client.connect(err => {
     const name = req.body.name;
     const email = req.body.email;
     const filePath = `${__dirname}/doctors/${file.name}`;
-    console.log(name, email, file);
 
     file.mv(filePath, err => {
       if (err) {
@@ -112,7 +117,6 @@ client.connect(err => {
 
   app.post('/isDoctor', (req, res) => {
     const email = req.body.email;
-    console.log(email)
     doctorCollection.find({ email: email })
       .toArray((err, doctors) => {
         res.send(doctors.length > 0);
