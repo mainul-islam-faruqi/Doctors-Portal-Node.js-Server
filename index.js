@@ -76,6 +76,13 @@ client.connect(err => {
     .catch(err=> console.log(err))
   })
 
+  app.get('/get-all-appointment', (req,res) => {
+    appointmentCollection.find({})
+    .toArray((err,documents)=>{
+      res.send(documents)
+    })
+  })
+
 
 
   app.post('/addDoctor', (req, res) => {
