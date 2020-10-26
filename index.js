@@ -4,7 +4,7 @@ const cors = require('cors');
 const fs = require('fs-extra');
 const fileUpload = require('express-fileupload');
 const MongoClient = require('mongodb').MongoClient;
-const {ObjectId} = require('mongodb')
+const { ObjectId } = require('mongodb')
 require('dotenv').config()
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fgaci.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -29,6 +29,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect(err => {
   const appointmentCollection = client.db("doctorsPortal").collection("appointments");
   const doctorCollection = client.db("doctorsPortal").collection("doctors");
+  const patientCollection = client.db("doctorsPortal").collection("patients");
 
   app.post('/addAppointment', (req, res) => {
     const appointment = req.body;
@@ -44,7 +45,7 @@ client.connect(err => {
 
     doctorCollection.find({ email: email })
       .toArray((err, doctors) => {
-        const filter = { date: date}
+        const filter = { date: date }
         if (doctors.length === 0) {
           filter.email = email;
         }
@@ -57,30 +58,30 @@ client.connect(err => {
       })
   })
 
-  app.post('/get-todays-appointment', (req,res) => {
+  app.post('/get-todays-appointment', (req, res) => {
     const date = req.body.date;
-    appointmentCollection.find({date:date})
-    .toArray((err,documents)=>{
-      res.send(documents)
-    })
+    appointmentCollection.find({ date: date })
+      .toArray((err, documents) => {
+        res.send(documents)
+      })
   })
 
-  app.patch('/update-status', (req,res)=>{
+  app.patch('/update-status', (req, res) => {
     appointmentCollection.updateOne(
-      {_id: ObjectId(req.body.id)},
-      {$set:{ 'action':req.body.action }}
+      { _id: ObjectId(req.body.id) },
+      { $set: { 'action': req.body.action } }
     )
-    .then(result => {
-      res.send(result.modifiedCount>0)
-    })
-    .catch(err=> console.log(err))
+      .then(result => {
+        res.send(result.modifiedCount > 0)
+      })
+      .catch(err => console.log(err))
   })
 
-  app.get('/get-all-appointment', (req,res) => {
+  app.get('/get-all-appointment', (req, res) => {
     appointmentCollection.find({})
-    .toArray((err,documents)=>{
-      res.send(documents)
-    })
+      .toArray((err, documents) => {
+        res.send(documents)
+      })
   })
 
 
@@ -141,6 +142,33 @@ client.connect(err => {
         res.send(doctors.length > 0);
       })
   })
+
+
+  app.post('/addPatient', (req, res) => {
+    const loggedInUser = req.body.loggedInUser;
+    const email = loggedInUser.email;
+    console.log(email);
+    doctorCollection.find({ email: email })
+      .toArray((err, doctor) => {
+        if (doctor.length === 0) {
+          patientCollection.find({ email: email })
+            .toArray((err, patient) => {
+              if (patient.length === 0) {
+                patientCollection.insertOne(loggedInUser)
+                .then(result => {
+                  res.send(result.insertedCount > 0)
+                })
+              }
+            })
+
+        }
+      })
+
+  })
+
+
+
+
 
 
 });
