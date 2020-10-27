@@ -146,15 +146,15 @@ client.connect(err => {
 
   app.post('/addPatient', (req, res) => {
     const loggedInUser = req.body.loggedInUser;
+    const name = loggedInUser.name;
     const email = loggedInUser.email;
-    console.log(email);
     doctorCollection.find({ email: email })
       .toArray((err, doctor) => {
         if (doctor.length === 0) {
           patientCollection.find({ email: email })
             .toArray((err, patient) => {
               if (patient.length === 0) {
-                patientCollection.insertOne(loggedInUser)
+                patientCollection.insertOne({name, email})
                 .then(result => {
                   res.send(result.insertedCount > 0)
                 })
@@ -164,6 +164,13 @@ client.connect(err => {
         }
       })
 
+  })
+
+  app.get('/all-patient',(req,res)=>{
+    patientCollection.find({})
+    .toArray((err,patients)=>{
+      res.send(patients)
+    })
   })
 
 
